@@ -115,10 +115,10 @@ public static class sPrinter
 		TimeSpan ts = TotalTime.Elapsed;
 		Console.Write("Elapsed: ");
 		if (ts.Hours > 0)
-			Console.Write("{0} Hour{1}, ", ts.Hours, ts.Hours > 1 ? "s" : "");
+			Console.Write("{0} Hour{1}, ", ts.Hours, ts.Hours == 1 ? "" : "s");
 		if (ts.Minutes > 0)
-			Console.Write("{0} Minute{1}, ", ts.Minutes, ts.Minutes > 1 ? "s" : "");
-		Console.WriteLine("{0} Second{1}", ts.Seconds, ts.Seconds > 1 ? "s" : "");
+			Console.Write("{0} Minute{1}, ", ts.Minutes, ts.Minutes == 1 ? "" : "s");
+		Console.WriteLine("{0} Second{1}", ts.Seconds, ts.Seconds == 1 ? "" : "s");
 		Console.WriteLine("Inst: {0}", CurrentInstruction);
 		Console.Write(new string('=', ConsoleWidth));
 	}
@@ -277,9 +277,9 @@ public static class sPrinter
 		Console.Write("Print finished in ");
 		// Copied from WriteScreen function
 		if (ts.Hours > 0)
-			Console.Write("{0} Hour{1}, ", ts.Hours, ts.Hours > 1 ? "s" : "");
+			Console.Write("{0} Hour{1}, ", ts.Hours, ts.Hours == 1 ? "" : "s");
 		if (ts.Minutes > 0)
-			Console.Write("{0} Minute{1}, ", ts.Minutes, ts.Minutes > 1 ? "s" : "");
-		Console.WriteLine("{0} Second{1}", ts.Seconds, ts.Seconds > 1 ? "s" : "");
+			Console.Write("{0} Minute{1}, ", ts.Minutes, ts.Minutes == 1 ? "" : "s");
+		Console.WriteLine("{0} Second{1}", ts.Seconds, ts.Seconds == 1 ? "" : "s");
 	}
 }

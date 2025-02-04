@@ -155,7 +155,7 @@ print("Found printer at port {0}".format(printerPort))
 
 serialPort = Serial(printerPort, baudrate=115200)
 
-fileData = None
+gcode = []
 while True:
 	path = input("Input GCode file path: ")
 	if path == "" or not os.path.isfile(path):
@@ -163,7 +163,15 @@ while True:
 		continue
 	print("Reading file to memory")
 	with open(path, "r") as dat:
-		fileData = dat.read()
+		for inst in dat.read().split("\n"):
+			inst = inst.strip()
+			if inst == "": # Empty line, ignore
+				continue
+			if inst.startswith(";"): # Line is a comment, ignore
+				continue
+			if inst.startswith("M105"): # Temperature request, ignore
+				continue
+			gcode.append(StripGCode(inst))
 	break
 
 # Attempt to communicate with printer
@@ -175,8 +183,6 @@ serialPort.write(b"M115\n")
 resp = serialPort.readline().decode()
 print("Printer responds: {0}".format(resp))
 
-gcode = fileData.split("\n")
-
 intervalClock = time()
 screenClock = time()
 totalTime = time()
@@ -185,15 +191,6 @@ for instruction in gcode:
 	if time() - intervalClock > TempInterval:
 		intervalClock = time()
 		serialPort.write(b"M105\n")
-	instruction = instruction.strip()
-	if instruction == "": # Empty line, ignore
-		continue
-	if instruction.startswith(";"): # Line is a comment, ignore
-		continue
-	if instruction.startswith("M105") # Temperature request, ignore
-		continue
-
-	instruction = StripGCode(instruction)
 	currentInstruction = instruction
 	serialPort.write("{0}\n".format(instruction).encode())
 	WriteScreen()

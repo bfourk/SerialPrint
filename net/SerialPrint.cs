@@ -225,16 +225,33 @@ public static class sPrinter
 		string resp = serialCon.ReadLine();
 		Console.WriteLine("Printer responds: {0}", resp);
 
-		string[]? gcode = new string[0];
+		string[]? gcode = null;
 		try
 		{
-			gcode = File.ReadAllLines(filePath);
+			string[] fileData = File.ReadAllLines(filePath);
+			List<string> Instructions = new List<string>();
+			for (int i = 0; i < fileData.Length; i++)
+			{
+				string inst = fileData[i].Trim();
+				if (inst == "") // Empty line, ignore
+				continue;
+				if (inst.StartsWith(";")) // Line is a comment, ignore
+					continue;
+				if (inst.StartsWith("M105")) // Temperature request, ignore
+					continue;
+				Instructions.Add(StripGCode(inst)); // Strip comments from the GCode instruction
+			}
+			gcode = Instructions.ToArray();
 		}
 		catch (Exception ex)
 		{
 			Console.WriteLine("Failed to open GCode file: {0}", ex.StackTrace);
 			Environment.Exit(1);
 		}
+		// Ensure old GCode data is GC'd (I don't know if this does anything)
+		GC.Collect();
+		GC.WaitForPendingFinalizers();
+		GC.Collect();
 		Console.WriteLine("Loaded GCode, running");
 		IntervalTime.Start();
 		TotalTime.Start();
@@ -246,15 +263,7 @@ public static class sPrinter
 				IntervalTime.Restart();
 				serialCon.WriteLine("M105");
 			}
-			string instruction = gcode[i].Trim();
-			if (instruction == "") // Empty line, ignore
-				continue;
-			if (instruction.StartsWith(";")) // Line is a comment, ignore
-				continue;
-			if (instruction.StartsWith("M105")) // Temperature request, ignore
-				continue;
-
-			instruction = StripGCode(instruction); // Strip comments from the GCode instruction
+			string instruction = gcode[i];
 			CurrentInstruction = instruction;
 			serialCon.WriteLine(instruction);
 			WriteScreen();

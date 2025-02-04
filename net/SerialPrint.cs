@@ -228,19 +228,22 @@ public static class sPrinter
 		string[]? gcode = null;
 		try
 		{
-			string[] fileData = File.ReadAllLines(filePath);
 			List<string> Instructions = new List<string>();
-			for (int i = 0; i < fileData.Length; i++)
-			{
-				string inst = fileData[i].Trim();
-				if (inst == "") // Empty line, ignore
-				continue;
-				if (inst.StartsWith(";")) // Line is a comment, ignore
-					continue;
-				if (inst.StartsWith("M105")) // Temperature request, ignore
-					continue;
-				Instructions.Add(StripGCode(inst)); // Strip comments from the GCode instruction
-			}
+			using (StreamReader Reader = new StreamReader(filePath))
+				while (true)
+				{
+					string? inst = Reader.ReadLine();
+					if (inst == null)
+						break;
+					inst = inst.Trim();
+					if (inst == "") // Empty line, ignore
+						continue;
+					if (inst.StartsWith(";")) // Line is a comment, ignore
+						continue;
+					if (inst.StartsWith("M105")) // Temperature request, ignore
+						continue;
+					Instructions.Add(StripGCode(inst)); // Strip comments from the GCode instruction
+				}
 			gcode = Instructions.ToArray();
 		}
 		catch (Exception ex)

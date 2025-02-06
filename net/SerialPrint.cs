@@ -45,6 +45,24 @@ public static class sPrinter
 		return ret;
 	}
 
+	/*
+	// Check if "inst" isn't a:
+		Blank line
+		Comment
+		M105 (Temperature Request)
+	*/
+	private static bool IsInstruction(string inst)
+	{
+		inst = inst.Trim();
+		if (inst == "") // Empty line, ignore
+			return false;
+		if (inst.StartsWith(";")) // Line is a comment, ignore
+			return false;
+		if (inst.StartsWith("M105")) // Temperature request, ignore
+			return false;
+		return true;
+	}
+
 	// Get the pty/tty port that the printer is at. Asks user when multiple are detected
 	private static string? GetPrinterPort()
 	{
@@ -228,33 +246,44 @@ public static class sPrinter
 		string[]? gcode = null;
 		try
 		{
-			List<string> Instructions = new List<string>();
+			uint lineCount = 0;
+
 			using (StreamReader Reader = new StreamReader(filePath))
+			{
+				// This isn't an elegant solution, but it does significantly reduce memory usage with bigger GCode files
+
+				// Figure out how big the gcode array will be
 				while (true)
 				{
 					string? inst = Reader.ReadLine();
 					if (inst == null)
 						break;
-					inst = inst.Trim();
-					if (inst == "") // Empty line, ignore
-						continue;
-					if (inst.StartsWith(";")) // Line is a comment, ignore
-						continue;
-					if (inst.StartsWith("M105")) // Temperature request, ignore
-						continue;
-					Instructions.Add(StripGCode(inst)); // Strip comments from the GCode instruction
+					if (IsInstruction(inst))
+						lineCount++;
 				}
-			gcode = Instructions.ToArray();
+				// Statically allocate gcode, reset the stream, populate gcode
+				Reader.DiscardBufferedData();
+				Reader.BaseStream.Seek(0, SeekOrigin.Begin);
+				gcode = new string[lineCount];
+				uint index = 0;
+				while (true)
+				{
+					string? inst = Reader.ReadLine();
+					if (inst == null)
+						break;
+					if (IsInstruction(inst))
+					{
+						gcode[index] = StripGCode(inst);
+						index++;
+					}
+				}
+			}
 		}
 		catch (Exception ex)
 		{
 			Console.WriteLine("Failed to open GCode file: {0}", ex.StackTrace);
 			Environment.Exit(1);
 		}
-		// Ensure old GCode data is GC'd (I don't know if this does anything)
-		GC.Collect();
-		GC.WaitForPendingFinalizers();
-		GC.Collect();
 		Console.WriteLine("Loaded GCode, running");
 		IntervalTime.Start();
 		TotalTime.Start();

@@ -81,10 +81,10 @@ def FormatSeconds(seconds):
 	seconds = int(seconds) # Fix formatting issues
 	ret = ""
 	if hours != 0:
-		ret += "{0} Hour{1}".format(hours, "s, " if (hours > 1 or hours == 0) else ", ")
+		ret += "{0} Hour{1}".format(hours, ", " if (hours == 1) else "s, ")
 	if minutes != 0:
-		ret += "{0} Minute{1}".format(minutes, "s, " if (minutes > 1 or minutes == 0) else ", ")
-	ret += "{0} Second{1}".format(seconds, "s" if (seconds > 1 or seconds == 0) else "")
+		ret += "{0} Minute{1}".format(minutes, ", " if (minutes == 1) else "s, ")
+	ret += "{0} Second{1}".format(seconds, "" if (seconds == 1) else "s")
 	return ret
 
 # Writes print-info to the screen

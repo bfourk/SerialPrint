@@ -182,7 +182,7 @@ public static class sPrinter
 		Console.CancelKeyPress += delegate {
 			Console.WriteLine("\nCtrl-C detected");
 			// serialCon only exists when printing
-			if (serialCon == null) // not printing, just exit
+			if (serialCon == null || !serialCon.IsOpen) // not printing, just exit
 				return;
 			Console.WriteLine("Stopping printer");
 			serialCon.WriteLine("M104 S0");

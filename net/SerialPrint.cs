@@ -66,15 +66,18 @@ public static class sPrinter
 	// Get the pty/tty port that the printer is at. Asks user when multiple are detected
 	private static string? GetPrinterPort()
 	{
-		string[] foundDevices = SerialPort.GetPortNames();
+		List<string> loopedDevices = new List<string>();
+		string[] devices = Directory.GetFiles("/dev");
+		foreach (string dev in devices)
+			if (dev.StartsWith("/dev/ttyUSB") || dev.StartsWith("/dev/ttyACM"))
+				loopedDevices.Add(dev);
+
+		string[] foundDevices = loopedDevices.ToArray();
 
 		if (foundDevices.Length == 0)
 			return null;
 		if (foundDevices.Length == 1)
 			return foundDevices[0];
-
-		if (foundDevices[0] == "/dev/ttyS0" && foundDevices.Length == 2)
-			return foundDevices[1]; // Workaround extra S0 device picked up
 
 		int index = 0;
 		Console.WriteLine("Multiple serial devices found:");

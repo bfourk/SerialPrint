@@ -201,6 +201,12 @@ public static class sPrinter
 		if (System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
 			Console.WriteLine("This program has not been tested on OSX, it may not work");
 
+		if (args.Length > 1)
+		{
+			Console.WriteLine("Program expects one argument: Path to GCode file");
+			Environment.Exit(1);
+		}
+
 		// Get the serial port the printer is on
 		string? port = GetPrinterPort();
 		if (port == null)
@@ -222,18 +228,23 @@ public static class sPrinter
 
 		// Get path to GCode file
 		string filePath = "";
-		while (true)
-		{
-			Console.Write("Input GCode file path: ");
-			string? path = Console.ReadLine();
-			if (path == null || !File.Exists(path))
+
+		if (args.Length == 1)
+			filePath = args[0];
+		else
+			while (true)
 			{
-				Console.WriteLine("\nFile not found");
-				continue;
+				Console.Write("Input GCode file path: ");
+				string? path = Console.ReadLine();
+				if (path == null || !File.Exists(path))
+				{
+					Console.WriteLine("\nFile not found");
+					continue;
+				}
+				filePath = path;
+				break;
 			}
-			filePath = path;
-			break;
-		}
+		
 
 		// Attempt to communicate with the printer
 		Console.WriteLine("Connecting to printer");
